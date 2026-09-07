@@ -20,13 +20,35 @@
     <h2>Faanyag Méretváltozás Kalkulátor</h2>
     
     <div class="form-group">
-        <label for="species">Fafaj:</label>
+        <label for="species">Fafaj kiválasztása:</label>
         <select id="species">
-            <option value="erdeifenyő">Erdeifenyő</option>
-            <option value="lucfenyő">Lucfenyő</option>
-            <option value="akác">Akác</option>
-            <option value="bükk">Bükk</option>
-            <option value="tölgy">Tölgy</option>
+            <optgroup label="Hazai tűlevelűek">
+                <option value="erdeifenyő">Erdeifenyő</option>
+                <option value="lucfenyő">Lucfenyő</option>
+                <option value="vörösfenyő">Vörösfenyő</option>
+                <option value="jegenyefenyő">Jegenyefenyő</option>
+            </optgroup>
+            <optgroup label="Hazai kemény lombos fák">
+                <option value="tölgy">Tölgy</option>
+                <option value="bükk">Bükk</option>
+                <option value="akác">Akác</option>
+                <option value="kőris">Kőris</option>
+                <option value="juhar">Juhar</option>
+                <option value="dió">Dió</option>
+            </optgroup>
+            <optgroup label="Hazai lágy lombos fák">
+                <option value="éger">Éger</option>
+                <option value="nyír">Nyír</option>
+                <option value="nyár">Nyár</option>
+                <option value="fűz">Fűz</option>
+            </optgroup>
+            <optgroup label="Egzotikus és trópusi fák">
+                <option value="mahagóni">Mahagóni</option>
+                <option value="teak">Teak</option>
+                <option value="paliszander">Paliszander</option>
+                <option value="wenge">Wenge</option>
+                <option value="ebenfa">Ebenfa</option>
+            </optgroup>
         </select>
     </div>
 
