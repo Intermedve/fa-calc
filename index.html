@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Faanyag Zsugorodás Kalkulátor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #218838; }
+        .result { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Faanyag Méretváltozás Kalkulátor</h2>
+    
+    <div class="form-group">
+        <label for="species">Fafaj:</label>
+        <select id="species">
+            <option value="erdeifenyő">Erdeifenyő</option>
+            <option value="lucfenyő">Lucfenyő</option>
+            <option value="akác">Akác</option>
+            <option value="bükk">Bükk</option>
+            <option value="tölgy">Tölgy</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="cutType">Fűrészelés típusa / Vágási irány:</label>
+        <select id="cutType">
+            <option value="tangential">Húrvágott (Flóderos) - Szélesség: Húrirány</option>
+            <option value="radial">Sugárvágott (Tükrös) - Szélesség: Sugárirány</option>
+            <option value="mixed">Vegyes / Félfriz (45°)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="u1">Kezdeti nedvességtartalom (U1 %):</label>
+        <input type="number" id="u1" value="25" step="0.1">
+    </div>
+
+    <div class="form-group">
+        <label for="u2">Cél nedvességtartalom (U2 %):</label>
+        <input type="number" id="u2" value="12" step="0.1">
+    </div>
+
+    <div class="form-group">
+        <label for="length">Hosszúság (mm):</label>
+        <input type="number" id="length" value="4000">
+    </div>
+
+    <div class="form-group">
+        <label for="width">Szélesség (mm):</label>
+        <input type="number" id="width" value="100">
+    </div>
+
+    <div class="form-group">
+        <label for="thickness">Vastagság (mm):</label>
+        <input type="number" id="thickness" value="50">
+    </div>
+
+    <button onclick="calculate()">Számítás</button>
+
+    <div class="result" id="output" style="display:none;"></div>
+</div>
+
+<script>
+// Zsugorodási adatok (%) a forrás 4.3. táblázata alapján
+const woodData = {
+    // Forrásdokumentumból származó adatok
+    "erdeifenyő": { Zr: 0.4, Zs: 4.0, Zh: 7.7, Zt: 12.1 },
+    "lucfenyő":   { Zr: 0.3, Zs: 3.6, Zh: 7.8, Zt: 11.7 },
+    "akác":       { Zr: 0.4, Zs: 3.9, Zh: 5.8, Zt: 10.1 },
+    "bükk":       { Zr: 0.3, Zs: 5.8, Zh: 11.8, Zt: 17.9 },
+    "tölgy":      { Zr: 0.4, Zs: 4.0, Zh: 7.8, Zt: 12.2 },
+    
+    // Szakipari alapadatbázissal kiegészített fafajok
+    "vörösfenyő": { Zr: 0.3, Zs: 3.3, Zh: 7.8, Zt: 11.4 },
+    "jegenyefenyő":{ Zr: 0.3, Zs: 3.4, Zh: 7.6, Zt: 11.3 },
+    "kőris":      { Zr: 0.2, Zs: 5.0, Zh: 8.0, Zt: 13.2 },
+    "juhar":      { Zr: 0.4, Zs: 3.0, Zh: 8.0, Zt: 11.5 },
+    "dió":        { Zr: 0.3, Zs: 5.4, Zh: 7.5, Zt: 13.2 },
+    "éger":       { Zr: 0.4, Zs: 4.4, Zh: 7.3, Zt: 12.1 },
+    "nyír":       { Zr: 0.6, Zs: 5.3, Zh: 7.8, Zt: 13.7 },
+    "nyár":       { Zr: 0.3, Zs: 4.2, Zh: 8.2, Zt: 12.7 },
+    "mahagóni":   { Zr: 0.2, Zs: 3.2, Zh: 5.2, Zt: 8.6 },
+    "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5 }
+};
+
+function calculate() {
+    const species = document.getElementById('species').value;
+    const cutType = document.getElementById('cutType').value;
+    
+    let u1 = parseFloat(document.getElementById('u1').value);
+    let u2 = parseFloat(document.getElementById('u2').value);
+    
+    const L1 = parseFloat(document.getElementById('length').value);
+    const W1 = parseFloat(document.getElementById('width').value);
+    const T1 = parseFloat(document.getElementById('thickness').value);
+
+    // Rosttelítettségi határ korrekció (max 30%)
+    const u1_corr = Math.min(u1, 30);
+    const u2_corr = Math.min(u2, 30);
+    const deltaU = u1_corr - u2_corr;
+
+    const data = woodData[species];
+    
+    let Z_width, Z_thickness;
+    
+    if (cutType === 'tangential') {
+        Z_width = data.Zh;
+        Z_thickness = data.Zs;
+    } else if (cutType === 'radial') {
+        Z_width = data.Zs;
+        Z_thickness = data.Zh;
+    } else { // vegyes
+        Z_width = (data.Zs + data.Zh) / 2;
+        Z_thickness = (data.Zs + data.Zh) / 2;
+    }
+    
+    const Z_length = data.Zr;
+
+    // Zsugorodás számítása: dM = M1 * Z * dU / 3000
+    const dL = L1 * (Z_length * deltaU) / 3000;
+    const dW = W1 * (Z_width * deltaU) / 3000;
+    const dT = T1 * (Z_thickness * deltaU) / 3000;
+
+    const L2 = L1 - dL;
+    const W2 = W1 - dW;
+    const T2 = T1 - dT;
+
+    const anisotropy = (data.Zh / data.Zs).toFixed(2);
+
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `
+        <h3>Eredmények (${species.toUpperCase()}):</h3>
+        <p><strong>Hosszúság:</strong> ${L2.toFixed(1)} mm (változás: -${dL.toFixed(2)} mm)</p>
+        <p><strong>Szélesség:</strong> ${W2.toFixed(1)} mm (változás: -${dW.toFixed(2)} mm)</p>
+        <p><strong>Vastagság:</strong> ${T2.toFixed(1)} mm (változás: -${dT.toFixed(2)} mm)</p>
+        <hr>
+        <p><small>Anizotrópia hányados (Zh/Zs): <strong>${anisotropy}</strong> ${anisotropy > 2 ? '⚠️ (Fokozott vetemedési hajlam!)' : ''}</small></p>
+    `;
+}
+</script>
+
+</body>
+</html>
