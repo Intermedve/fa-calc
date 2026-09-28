@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Faanyag Zsugorodás és Dagadás Kalkulátor</title>
+    <title>Faanyag Méretváltozás és Nedvesség Kalkulátor</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; max-width: 650px; background: #f4f4f9; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -12,7 +12,8 @@
         button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 4px; margin-top: 10px; }
         button:hover { background: #218838; }
         .result { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
-        .mode-toggle { background: #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        .mode-toggle { background: #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0d6efd; }
+        .info-note { font-size: 0.85em; color: #555; margin-top: 4px; }
         .time-box { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 10px; margin-top: 10px; }
     </style>
 </head>
@@ -24,32 +25,27 @@
     <div class="form-group">
         <label for="species">Fafaj kiválasztása:</label>
         <select id="species">
+            <optgroup label="Hazai kemény lombos fák">
+                <option value="akác" selected>Akác</option>
+                <option value="tölgy">Tölgy</option>
+                <option value="bükk">Bükk</option>
+                <option value="kőris">Kőris</option>
+                <option value="juhar">Juhar</option>
+                <option value="dió">Dió</option>
+            </optgroup>
             <optgroup label="Hazai tűlevelűek">
                 <option value="erdeifenyő">Erdeifenyő</option>
                 <option value="lucfenyő">Lucfenyő</option>
                 <option value="vörösfenyő">Vörösfenyő</option>
-                <option value="jegenyefenyő">Jegenyefenyő</option>
-            </optgroup>
-            <optgroup label="Hazai kemény lombos fák">
-                <option value="tölgy">Tölgy</option>
-                <option value="bükk">Bükk</option>
-                <option value="akác" selected>Akác</option>
-                <option value="kőris">Kőris</option>
-                <option value="juhar">Juhar</option>
-                <option value="dió">Dió</option>
             </optgroup>
             <optgroup label="Hazai lágy lombos fák">
                 <option value="éger">Éger</option>
                 <option value="nyír">Nyír</option>
                 <option value="nyár">Nyár</option>
-                <option value="fűz">Fűz</option>
             </optgroup>
-            <optgroup label="Egzotikus és trópusi fák">
+            <optgroup label="Egzotikus fák">
                 <option value="mahagóni">Mahagóni</option>
                 <option value="teak">Teak</option>
-                <option value="paliszander">Paliszander</option>
-                <option value="wenge">Wenge</option>
-                <option value="ebenfa">Ebenfa</option>
             </optgroup>
         </select>
     </div>
@@ -64,34 +60,36 @@
     </div>
 
     <div class="mode-toggle">
-        <label for="calcMode">Számítás alapja:</label>
+        <label for="calcMode">Adatmegadás módja:</label>
         <select id="calcMode" onchange="toggleInputMode()">
-            <option value="rh">Környezeti relatív páratartalom (RH %)</option>
-            <option value="direct">Közvetlen fa nedvességtartalom (U %)</option>
+            <option value="rh_to_rh">1. Levegő RH% → Levegő RH% (Környezetváltozás)</option>
+            <option value="u_to_u">2. Fa U% → Fa U% (Közvetlen fanedvesség)</option>
+            <option value="u_to_rh">3. Fa U% → Levegő RH% (Átszállítás új klímára)</option>
         </select>
     </div>
 
-    <!-- Páratartalom bemenetek -->
-    <div id="rhInputs">
-        <div class="form-group">
-            <label for="rh1">Kezdeti relatív páratartalom (RH1 %):</label>
-            <input type="number" id="rh1" value="45" min="10" max="100" step="1">
+    <!-- Bemeneti mezők dinamikus megjelenítése -->
+    <div id="inputGroup">
+        <div class="form-group" id="field_rh1">
+            <label for="rh1">Kezdeti levegő páratartalom (RH1 %):</label>
+            <input type="number" id="rh1" value="45" min="10" max="100" oninput="updatePreview()">
+            <div class="info-note" id="rh1_preview"></div>
         </div>
-        <div class="form-group">
-            <label for="rh2">Cél relatív páratartalom (RH2 %):</label>
-            <input type="number" id="rh2" value="60" min="10" max="100" step="1">
-        </div>
-    </div>
 
-    <!-- Közvetlen U% bemenetek -->
-    <div id="directInputs" style="display:none;">
-        <div class="form-group">
-            <label for="u1">Kezdeti nedvességtartalom (U1 %):</label>
-            <input type="number" id="u1" value="8" step="0.1">
+        <div class="form-group" id="field_u1" style="display:none;">
+            <label for="u1">Kezdeti fa nedvességtartalom (U1 %):</label>
+            <input type="number" id="u1" value="8" step="0.1" oninput="updatePreview()">
         </div>
-        <div class="form-group">
-            <label for="u2">Cél nedvességtartalom (U2 %):</label>
-            <input type="number" id="u2" value="11" step="0.1">
+
+        <div class="form-group" id="field_rh2">
+            <label for="rh2">Cél levegő páratartalom (RH2 %):</label>
+            <input type="number" id="rh2" value="60" min="10" max="100" oninput="updatePreview()">
+            <div class="info-note" id="rh2_preview"></div>
+        </div>
+
+        <div class="form-group" id="field_u2" style="display:none;">
+            <label for="u2">Cél fa nedvességtartalom (U2 %):</label>
+            <input type="number" id="u2" value="20" step="0.1" oninput="updatePreview()">
         </div>
     </div>
 
@@ -116,15 +114,13 @@
 </div>
 
 <script>
-// Zsugorodási adatok (%) és diffúziós tényező (diffFactor: tömörség/szerkezet miatti lassulás)
 const woodData = {
+    "akác":       { Zr: 0.4, Zs: 3.9, Zh: 5.8, Zt: 10.1, diff: 1.4 },
+    "tölgy":      { Zr: 0.4, Zs: 4.0, Zh: 7.8, Zt: 12.2, diff: 1.3 },
+    "bükk":       { Zr: 0.3, Zs: 5.8, Zh: 11.8, Zt: 17.9, diff: 1.1 },
     "erdeifenyő": { Zr: 0.4, Zs: 4.0, Zh: 7.7, Zt: 12.1, diff: 0.9 },
     "lucfenyő":   { Zr: 0.3, Zs: 3.6, Zh: 7.8, Zt: 11.7, diff: 0.8 },
-    "akác":       { Zr: 0.4, Zs: 3.9, Zh: 5.8, Zt: 10.1, diff: 1.4 },
-    "bükk":       { Zr: 0.3, Zs: 5.8, Zh: 11.8, Zt: 17.9, diff: 1.1 },
-    "tölgy":      { Zr: 0.4, Zs: 4.0, Zh: 7.8, Zt: 12.2, diff: 1.3 },
     "vörösfenyő": { Zr: 0.3, Zs: 3.3, Zh: 7.8, Zt: 11.4, diff: 1.0 },
-    "jegenyefenyő":{ Zr: 0.3, Zs: 3.4, Zh: 7.6, Zt: 11.3, diff: 0.8 },
     "kőris":      { Zr: 0.2, Zs: 5.0, Zh: 8.0, Zt: 13.2, diff: 1.2 },
     "juhar":      { Zr: 0.4, Zs: 3.0, Zh: 8.0, Zt: 11.5, diff: 1.0 },
     "dió":        { Zr: 0.3, Zs: 5.4, Zh: 7.5, Zt: 13.2, diff: 1.1 },
@@ -135,23 +131,15 @@ const woodData = {
     "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5,  diff: 1.2 }
 };
 
-// Szorpciós izoterma közelepítés (RH % -> U % kb. 20°C-on)
+// Szorpciós izoterma (20°C-on)
 function rhToEmc(rh) {
     if (rh <= 0) return 0;
     if (rh >= 100) return 30;
-    // Becsült szorpciós izoterma pontok
     const points = [
-        { rh: 0, u: 0 },
-        { rh: 20, u: 4.5 },
-        { rh: 35, u: 6.8 },
-        { rh: 45, u: 8.3 },
-        { rh: 50, u: 9.2 },
-        { rh: 60, u: 11.0 },
-        { rh: 70, u: 13.2 },
-        { rh: 80, u: 16.2 },
-        { rh: 85, u: 18.0 },
-        { rh: 90, u: 21.0 },
-        { rh: 100, u: 30.0 }
+        { rh: 0, u: 0 }, { rh: 20, u: 4.5 }, { rh: 35, u: 6.8 },
+        { rh: 45, u: 8.3 }, { rh: 50, u: 9.2 }, { rh: 60, u: 11.0 },
+        { rh: 70, u: 13.2 }, { rh: 80, u: 16.2 }, { rh: 85, u: 18.0 },
+        { rh: 90, u: 21.0 }, { rh: 100, u: 30.0 }
     ];
     for (let i = 0; i < points.length - 1; i++) {
         if (rh >= points[i].rh && rh <= points[i+1].rh) {
@@ -164,8 +152,20 @@ function rhToEmc(rh) {
 
 function toggleInputMode() {
     const mode = document.getElementById('calcMode').value;
-    document.getElementById('rhInputs').style.display = (mode === 'rh') ? 'block' : 'none';
-    document.getElementById('directInputs').style.display = (mode === 'direct') ? 'block' : 'none';
+    
+    document.getElementById('field_rh1').style.display = (mode === 'rh_to_rh') ? 'block' : 'none';
+    document.getElementById('field_u1').style.display  = (mode !== 'rh_to_rh') ? 'block' : 'none';
+    document.getElementById('field_rh2').style.display = (mode !== 'u_to_u') ? 'block' : 'none';
+    document.getElementById('field_u2').style.display  = (mode === 'u_to_u') ? 'block' : 'none';
+    
+    updatePreview();
+}
+
+function updatePreview() {
+    const rh1 = parseFloat(document.getElementById('rh1').value) || 0;
+    const rh2 = parseFloat(document.getElementById('rh2').value) || 0;
+    document.getElementById('rh1_preview').innerText = `→ Becsült egyensúlyi fanedvesség (U1): ~${rhToEmc(rh1).toFixed(1)}%`;
+    document.getElementById('rh2_preview').innerText = `→ Becsült egyensúlyi fanedvesség (U2): ~${rhToEmc(rh2).toFixed(1)}%`;
 }
 
 function calculate() {
@@ -174,46 +174,41 @@ function calculate() {
     const mode = document.getElementById('calcMode').value;
     
     let u1, u2;
-    if (mode === 'rh') {
-        const rh1 = parseFloat(document.getElementById('rh1').value);
-        const rh2 = parseFloat(document.getElementById('rh2').value);
-        u1 = rhToEmc(rh1);
-        u2 = rhToEmc(rh2);
-    } else {
+
+    if (mode === 'rh_to_rh') {
+        u1 = rhToEmc(parseFloat(document.getElementById('rh1').value));
+        u2 = rhToEmc(parseFloat(document.getElementById('rh2').value));
+    } else if (mode === 'u_to_u') {
         u1 = parseFloat(document.getElementById('u1').value);
         u2 = parseFloat(document.getElementById('u2').value);
+    } else { // u_to_rh
+        u1 = parseFloat(document.getElementById('u1').value);
+        u2 = rhToEmc(parseFloat(document.getElementById('rh2').value));
     }
     
     const L1 = parseFloat(document.getElementById('length').value);
     const W1 = parseFloat(document.getElementById('width').value);
     const T1 = parseFloat(document.getElementById('thickness').value);
 
-    // Rosttelítettségi határ korrekció (max 30%)
     const u1_corr = Math.min(u1, 30);
     const u2_corr = Math.min(u2, 30);
-    
-    // Nedvességváltozás és előjel (pozitív: dagadás, negatív: zsugorodás)
     const deltaU = u2_corr - u1_corr;
+    
     const isSwelling = deltaU > 0;
-    const absDeltaU = Math.abs(deltaU);
-
     const data = woodData[species] || { Zr: 0.3, Zs: 4.0, Zh: 7.0, Zt: 12.0, diff: 1.0 };
     
     let Z_width, Z_thickness;
     if (cutType === 'tangential') {
-        Z_width = data.Zh;
-        Z_thickness = data.Zs;
+        Z_width = data.Zh; Z_thickness = data.Zs;
     } else if (cutType === 'radial') {
-        Z_width = data.Zs;
-        Z_thickness = data.Zh;
+        Z_width = data.Zs; Z_thickness = data.Zh;
     } else {
         Z_width = (data.Zs + data.Zh) / 2;
         Z_thickness = (data.Zs + data.Zh) / 2;
     }
-    const Z_length = data.Zr;
 
-    // Változások mm-ben: dM = M1 * Z * dU / 3000
-    const dL = L1 * (Z_length * deltaU) / 3000;
+    // Méretváltozás számítása (dM = M1 * Z * dU / 3000)
+    const dL = L1 * (data.Zr * deltaU) / 3000;
     const dW = W1 * (Z_width * deltaU) / 3000;
     const dT = T1 * (Z_thickness * deltaU) / 3000;
 
@@ -221,34 +216,23 @@ function calculate() {
     const W2 = W1 + dW;
     const T2 = T1 + dT;
 
-    // --- Időtartam becslése (Fick-féle diffúzió) ---
-    // A legkisebb keresztmetszeti méret határozza meg a behatolást (vastagság)
+    // Időtartam becslése
     const minDim = Math.min(W1, T1); 
-    // Alapértelmezett beállási idő napokban: t ~ k * (d / 10)^2 * diffFactor
     const baseDays = 1.5 * Math.pow(minDim / 10, 2) * data.diff;
     const minDays = Math.max(1, Math.round(baseDays * 0.7));
     const maxDays = Math.round(baseDays * 1.4);
 
-    let timeText = "";
-    if (maxDays < 7) {
-        timeText = `${minDays}–${maxDays} nap`;
-    } else {
-        const minWeeks = Math.round(minDays / 7);
-        const maxWeeks = Math.round(maxDays / 7);
-        timeText = `${minWeeks}–${maxWeeks} hét (${minDays}–${maxDays} nap)`;
-    }
+    let timeText = (maxDays < 7) ? `${minDays}–${maxDays} nap` : `${Math.round(minDays/7)}–${Math.round(maxDays/7)} hét (${minDays}–${maxDays} nap)`;
 
-    const processType = isSwelling ? "Dagadás (Méretnövekedés)" : "Zsugorodás (Méretcsökkenés)";
     const signStr = isSwelling ? "+" : "";
-
-    const anisotropy = (data.Zh / data.Zs).toFixed(2);
+    const processType = isSwelling ? "Dagadás (Méretnövekedés)" : (deltaU === 0 ? "Nincs méretváltozás" : "Zsugorodás (Méretcsökkenés)");
 
     const out = document.getElementById('output');
     out.style.display = 'block';
     out.innerHTML = `
         <h3>Eredmények (${species.toUpperCase()}):</h3>
         <p><strong>Folyamat:</strong> ${processType}</p>
-        <p><strong>Kezdeti nedvesség (U1):</strong> ${u1.toFixed(1)}% | <strong>Cél nedvesség (U2):</strong> ${u2.toFixed(1)}%</p>
+        <p><strong>Számított fanedvesség-változás (ΔU):</strong> ${u1.toFixed(1)}% → ${u2.toFixed(1)}% (ΔU = ${deltaU > 0 ? '+' : ''}${deltaU.toFixed(1)}%)</p>
         <hr>
         <p><strong>Hosszúság:</strong> ${L2.toFixed(1)} mm (változás: ${signStr}${dL.toFixed(2)} mm)</p>
         <p><strong>Szélesség:</strong> ${W2.toFixed(1)} mm (változás: ${signStr}${dW.toFixed(2)} mm)</p>
@@ -256,15 +240,14 @@ function calculate() {
         
         <div class="time-box">
             <h4>⏱️ Becsült időtartam az egyensúly eléréséig:</h4>
-            <p>• <strong>Felületi válaszidő (1-2 mm):</strong> 1–3 nap</p>
-            <p>• <strong>Teljes keresztmetszeti egyensúly:</strong> kb. <strong>${timeText}</strong></p>
-            <small><i>(Megjegyzés: Az időtartam függ a szellőzéstől, hőmérséklettől és a felületkezeléstől.)</i></small>
+            <p>• <strong>Felületi reakció (1-2 mm):</strong> 1–3 nap</p>
+            <p>• <strong>Teljes keresztmetszeti beállás:</strong> kb. <strong>${timeText}</strong></p>
         </div>
-
-        <hr>
-        <p><small>Anizotrópia hányados (Zh/Zs): <strong>${anisotropy}</strong> ${anisotropy > 2 ? '⚠️ (Fokozott vetemedési hajlam!)' : ''}</small></p>
     `;
 }
+
+// Kezdő nézet beállítása
+toggleInputMode();
 </script>
 
 </body>
