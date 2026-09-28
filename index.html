@@ -2,25 +2,166 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Faanyag Méretváltozás és Nedvesség Kalkulátor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faanyag Méretváltozás Kalkulátor</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; max-width: 650px; background: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 4px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-        button:hover { background: #218838; }
-        .result { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
-        .mode-toggle { background: #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0d6efd; }
-        .info-note { font-size: 0.85em; color: #555; margin-top: 4px; }
-        .time-box { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 10px; margin-top: 10px; }
+        :root {
+            --bg-color: #FAFAFA;       /* 60% Off-White Paper */
+            --text-color: #2E4031;     /* 30% Forest Moss */
+            --brand-color: #6E3B24;    /* Secondary Rich Mahogany */
+            --accent-color: #D4A359;   /* 10% Brass Hardware CTA */
+            --card-bg: #FFFFFF;
+            --input-bg: #FAFAFA;
+            --border-color: #D0D7D1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 16px 12px;
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 24px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(46, 64, 49, 0.08);
+            border: 1px solid rgba(110, 59, 36, 0.15);
+        }
+
+        h2 {
+            color: var(--brand-color);
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--brand-color);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            color: var(--brand-color);
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            color: var(--brand-color);
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 16px; /* Mobil automatikus zoom megakadályozása */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--brand-color);
+            box-shadow: 0 0 0 3px rgba(110, 59, 36, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            color: #2E4031;
+            font-weight: bold;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-top: 10px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background-color: #C09248;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        .mode-toggle {
+            background: #F0F4F1;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            border-left: 4px solid var(--brand-color);
+        }
+
+        .info-note {
+            font-size: 0.85rem;
+            color: #4A5E4F;
+            margin-top: 5px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            background: #F4F6F4;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .time-box {
+            background: #F7F3EE;
+            border-left: 4px solid var(--brand-color);
+            padding: 12px 14px;
+            margin-top: 14px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 12px 0;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            .card {
+                padding: 16px 12px;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Faanyag Méretváltozás és Idő-Kalkulátor</h2>
+    <h2>Faanyag Méretváltozás Kalkulátor</h2>
     
     <div class="form-group">
         <label for="species">Fafaj kiválasztása:</label>
@@ -68,7 +209,6 @@
         </select>
     </div>
 
-    <!-- Bemeneti mezők dinamikus megjelenítése -->
     <div id="inputGroup">
         <div class="form-group" id="field_rh1">
             <label for="rh1">Kezdeti levegő páratartalom (RH1 %):</label>
@@ -131,7 +271,6 @@ const woodData = {
     "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5,  diff: 1.2 }
 };
 
-// Szorpciós izoterma (20°C-on)
 function rhToEmc(rh) {
     if (rh <= 0) return 0;
     if (rh >= 100) return 30;
@@ -181,7 +320,7 @@ function calculate() {
     } else if (mode === 'u_to_u') {
         u1 = parseFloat(document.getElementById('u1').value);
         u2 = parseFloat(document.getElementById('u2').value);
-    } else { // u_to_rh
+    } else {
         u1 = parseFloat(document.getElementById('u1').value);
         u2 = rhToEmc(parseFloat(document.getElementById('rh2').value));
     }
@@ -207,7 +346,6 @@ function calculate() {
         Z_thickness = (data.Zs + data.Zh) / 2;
     }
 
-    // Méretváltozás számítása (dM = M1 * Z * dU / 3000)
     const dL = L1 * (data.Zr * deltaU) / 3000;
     const dW = W1 * (Z_width * deltaU) / 3000;
     const dT = T1 * (Z_thickness * deltaU) / 3000;
@@ -216,7 +354,6 @@ function calculate() {
     const W2 = W1 + dW;
     const T2 = T1 + dT;
 
-    // Időtartam becslése
     const minDim = Math.min(W1, T1); 
     const baseDays = 1.5 * Math.pow(minDim / 10, 2) * data.diff;
     const minDays = Math.max(1, Math.round(baseDays * 0.7));
@@ -246,7 +383,6 @@ function calculate() {
     `;
 }
 
-// Kezdő nézet beállítása
 toggleInputMode();
 </script>
 
