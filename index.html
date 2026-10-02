@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faanyag Méret-, Tömeg- és Hiszterézis Kalkulátor</title>
     <style>
-        :root {
+        /* TÉMÁK DEFINIÁLÁSA CSS VÁLTOZÓKKAL */
+        :root, body[data-theme="light"] {
             --bg-color: #FAFAFA;
             --text-color: #2E4031;
             --brand-color: #6E3B24;
@@ -13,6 +14,44 @@
             --card-bg: #FFFFFF;
             --input-bg: #FAFAFA;
             --border-color: #D0D7D1;
+            --box-bg: #F4F6F4;
+            --box-accent-bg: #F7F3EE;
+            --hyst-bg: #FAF4EE;
+            --toggle-bg: #F0F4F1;
+            --note-color: #4A5E4F;
+            --button-text: #2E4031;
+        }
+
+        body[data-theme="forest"] {
+            --bg-color: #1A1410;
+            --text-color: #E6D7C3;
+            --brand-color: #E89548;
+            --accent-color: #B86B32;
+            --card-bg: #261E18;
+            --input-bg: #332820;
+            --border-color: #4A3A2F;
+            --box-bg: #30261E;
+            --box-accent-bg: #382B21;
+            --hyst-bg: #3D261C;
+            --toggle-bg: #332820;
+            --note-color: #B5A490;
+            --button-text: #FFFFFF;
+        }
+
+        body[data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #E0E0E0;
+            --brand-color: #E5A93C;
+            --accent-color: #C6821D;
+            --card-bg: #1E1E1E;
+            --input-bg: #2B2B2B;
+            --border-color: #3E3E3E;
+            --box-bg: #262626;
+            --box-accent-bg: #2D2A24;
+            --hyst-bg: #332B24;
+            --toggle-bg: #2A2A2A;
+            --note-color: #A0A0A0;
+            --button-text: #121212;
         }
 
         * {
@@ -29,6 +68,7 @@
             line-height: 1.5;
             display: flex;
             justify-content: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .card {
@@ -37,9 +77,30 @@
             max-width: 600px;
             padding: 24px 18px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(46, 64, 49, 0.08);
-            border: 1px solid rgba(110, 59, 36, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
             position: relative;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .theme-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .theme-container label {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .theme-container select {
+            width: auto;
+            padding: 6px 10px;
+            font-size: 0.85rem;
         }
 
         h2 {
@@ -50,17 +111,12 @@
             padding-bottom: 8px;
         }
 
-        h3 {
+        h3, h4 {
             color: var(--brand-color);
-            font-size: 1.15rem;
-            margin-bottom: 10px;
         }
 
-        h4 {
-            color: var(--brand-color);
-            font-size: 1rem;
-            margin-bottom: 6px;
-        }
+        h3 { font-size: 1.15rem; margin-bottom: 10px; }
+        h4 { font-size: 1rem; margin-bottom: 6px; }
 
         .form-group {
             margin-bottom: 14px;
@@ -82,13 +138,13 @@
             background-color: var(--input-bg);
             color: var(--text-color);
             font-size: 16px; /* Mobil zoom megakadályozása iOS-en */
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
         }
 
         input:focus, select:focus {
             outline: none;
             border-color: var(--brand-color);
-            box-shadow: 0 0 0 3px rgba(110, 59, 36, 0.2);
+            box-shadow: 0 0 0 3px rgba(110, 59, 36, 0.25);
         }
 
         /* Sticky (ragadós) gomb mobil nézethez */
@@ -96,7 +152,7 @@
             width: 100%;
             padding: 14px;
             background-color: var(--accent-color);
-            color: #2E4031;
+            color: var(--button-text);
             font-weight: bold;
             border: none;
             font-size: 1rem;
@@ -108,11 +164,7 @@
             position: sticky;
             bottom: 10px;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            background-color: #C09248;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         button:active {
@@ -120,38 +172,41 @@
         }
 
         .mode-toggle {
-            background: #F0F4F1;
+            background: var(--toggle-bg);
             padding: 14px;
             border-radius: 8px;
             margin-bottom: 18px;
             border-left: 4px solid var(--brand-color);
+            transition: background-color 0.3s ease;
         }
 
         .info-note {
             font-size: 0.85rem;
-            color: #4A5E4F;
+            color: var(--note-color);
             margin-top: 5px;
         }
 
         .result {
             margin-top: 20px;
             padding: 16px;
-            background: #F4F6F4;
+            background: var(--box-bg);
             border-radius: 8px;
             border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease;
         }
 
         .time-box, .weight-box, .hyst-box {
-            background: #F7F3EE;
+            background: var(--box-accent-bg);
             border-left: 4px solid var(--brand-color);
             padding: 12px 14px;
             margin-top: 14px;
             border-radius: 0 6px 6px 0;
+            transition: background-color 0.3s ease;
         }
 
         .hyst-box {
-            border-left-color: #A0522D;
-            background-color: #FAF4EE;
+            border-left-color: var(--accent-color);
+            background-color: var(--hyst-bg);
         }
 
         hr {
@@ -161,18 +216,23 @@
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 8px 8px 30px 8px;
-            }
-            .card {
-                padding: 16px 12px;
-            }
+            body { padding: 8px 8px 30px 8px; }
+            .card { padding: 16px 12px; }
         }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <div class="theme-container">
+        <label for="themeSelect">🎨 Téma / Megjelenés:</label>
+        <select id="themeSelect" onchange="changeTheme()">
+            <option value="light">Világos (Klasszikus)</option>
+            <option value="forest">Erdő barna (Meleg fa)</option>
+            <option value="dark">Teljesen sötét (Dark Mode)</option>
+        </select>
+    </div>
+
     <h2>Faanyag Méret- és Tömegváltozás Kalkulátor</h2>
     
     <div class="form-group">
@@ -283,9 +343,22 @@ const woodData = {
     "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5,  diff: 1.2, rho12: 660, fsp: 20, hyst: 0.80 }
 };
 
+/* TÉMA KEZELÉSE */
+function changeTheme() {
+    const theme = document.getElementById('themeSelect').value;
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('wood_calc_theme', theme);
+}
+
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('wood_calc_theme') || 'light';
+    document.getElementById('themeSelect').value = savedTheme;
+    document.body.setAttribute('data-theme', savedTheme);
+}
+
 function handleEnter(e) {
     if (e.key === 'Enter') {
-        e.target.blur(); // Billentyűzet lecsukása gépelés után
+        e.target.blur();
         calculate();
     }
 }
@@ -448,10 +521,11 @@ function calculate() {
         </div>
     `;
 
-    // Automatikus görgetés az eredményekhez mobil kijelzőn
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Kezdőállapotok és téma betöltése
+loadSavedTheme();
 toggleInputMode();
 </script>
 
