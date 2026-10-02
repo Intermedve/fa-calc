@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faanyag Méret- és Tömegváltozás Kalkulátor</title>
+    <title>Faanyag Méret-, Tömeg- és Hiszterézis Kalkulátor</title>
     <style>
         :root {
-            --bg-color: #FAFAFA;       /* 60% Off-White Paper */
-            --text-color: #2E4031;     /* 30% Forest Moss */
-            --brand-color: #6E3B24;    /* Secondary Rich Mahogany */
-            --accent-color: #D4A359;   /* 10% Brass Hardware CTA */
+            --bg-color: #FAFAFA;
+            --text-color: #2E4031;
+            --brand-color: #6E3B24;
+            --accent-color: #D4A359;
             --card-bg: #FFFFFF;
             --input-bg: #FAFAFA;
             --border-color: #D0D7D1;
@@ -80,7 +80,7 @@
             border-radius: 6px;
             background-color: var(--input-bg);
             color: var(--text-color);
-            font-size: 16px; /* Mobil zoom megakadályozása */
+            font-size: 16px;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -134,12 +134,17 @@
             border: 1px solid var(--border-color);
         }
 
-        .time-box, .weight-box {
+        .time-box, .weight-box, .hyst-box {
             background: #F7F3EE;
             border-left: 4px solid var(--brand-color);
             padding: 12px 14px;
             margin-top: 14px;
             border-radius: 0 6px 6px 0;
+        }
+
+        .hyst-box {
+            border-left-color: #A0522D;
+            background-color: #FAF4EE;
         }
 
         hr {
@@ -165,28 +170,28 @@
     
     <div class="form-group">
         <label for="species">Fafaj kiválasztása:</label>
-        <select id="species">
+        <select id="species" onchange="updatePreview()">
             <optgroup label="Hazai kemény lombos fák">
-                <option value="akác" selected>Akác (~730 kg/m³)</option>
-                <option value="tölgy">Tölgy (~690 kg/m³)</option>
-                <option value="bükk">Bükk (~720 kg/m³)</option>
-                <option value="kőris">Kőris (~680 kg/m³)</option>
-                <option value="juhar">Juhar (~630 kg/m³)</option>
-                <option value="dió">Dió (~650 kg/m³)</option>
+                <option value="akác" selected>Akác (FSP: ~22%, ρ12: 730 kg/m³)</option>
+                <option value="tölgy">Tölgy (FSP: ~24%, ρ12: 690 kg/m³)</option>
+                <option value="bükk">Bükk (FSP: ~30%, ρ12: 720 kg/m³)</option>
+                <option value="kőris">Kőris (FSP: ~26%, ρ12: 680 kg/m³)</option>
+                <option value="juhar">Juhar (FSP: ~28%, ρ12: 630 kg/m³)</option>
+                <option value="dió">Dió (FSP: ~25%, ρ12: 650 kg/m³)</option>
             </optgroup>
             <optgroup label="Hazai tűlevelűek">
-                <option value="erdeifenyő">Erdeifenyő (~520 kg/m³)</option>
-                <option value="lucfenyő">Lucfenyő (~470 kg/m³)</option>
-                <option value="vörösfenyő">Vörösfenyő (~600 kg/m³)</option>
+                <option value="erdeifenyő">Erdeifenyő (FSP: ~28%, ρ12: 520 kg/m³)</option>
+                <option value="lucfenyő">Lucfenyő (FSP: ~30%, ρ12: 470 kg/m³)</option>
+                <option value="vörösfenyő">Vörösfenyő (FSP: ~27%, ρ12: 600 kg/m³)</option>
             </optgroup>
             <optgroup label="Hazai lágy lombos fák">
-                <option value="éger">Éger (~530 kg/m³)</option>
-                <option value="nyír">Nyír (~650 kg/m³)</option>
-                <option value="nyár">Nyár (~450 kg/m³)</option>
+                <option value="éger">Éger (FSP: ~28%, ρ12: 530 kg/m³)</option>
+                <option value="nyír">Nyír (FSP: ~30%, ρ12: 650 kg/m³)</option>
+                <option value="nyár">Nyár (FSP: ~31%, ρ12: 450 kg/m³)</option>
             </optgroup>
             <optgroup label="Egzotikus fák">
-                <option value="mahagóni">Mahagóni (~560 kg/m³)</option>
-                <option value="teak">Teak (~660 kg/m³)</option>
+                <option value="mahagóni">Mahagóni (FSP: ~22%, ρ12: 560 kg/m³)</option>
+                <option value="teak">Teak (FSP: ~20%, ρ12: 660 kg/m³)</option>
             </optgroup>
         </select>
     </div>
@@ -254,40 +259,56 @@
 </div>
 
 <script>
-// Zsugorodási adatok (%), diffúziós tényező és átlagos légszáraz sűrűség (rho12, kg/m3)
+// Fafajok adatai: Zsugorodások (%), diffúzió, légszáraz sűrűség (rho12, kg/m3), 
+// Rosttelítettségi határ (FSP, %), Hiszterézis arány (hyst = U_ads / U_des)
 const woodData = {
-    "akác":       { Zr: 0.4, Zs: 3.9, Zh: 5.8, Zt: 10.1, diff: 1.4, rho12: 730 },
-    "tölgy":      { Zr: 0.4, Zs: 4.0, Zh: 7.8, Zt: 12.2, diff: 1.3, rho12: 690 },
-    "bükk":       { Zr: 0.3, Zs: 5.8, Zh: 11.8, Zt: 17.9, diff: 1.1, rho12: 720 },
-    "erdeifenyő": { Zr: 0.4, Zs: 4.0, Zh: 7.7, Zt: 12.1, diff: 0.9, rho12: 520 },
-    "lucfenyő":   { Zr: 0.3, Zs: 3.6, Zh: 7.8, Zt: 11.7, diff: 0.8, rho12: 470 },
-    "vörösfenyő": { Zr: 0.3, Zs: 3.3, Zh: 7.8, Zt: 11.4, diff: 1.0, rho12: 600 },
-    "kőris":      { Zr: 0.2, Zs: 5.0, Zh: 8.0, Zt: 13.2, diff: 1.2, rho12: 680 },
-    "juhar":      { Zr: 0.4, Zs: 3.0, Zh: 8.0, Zt: 11.5, diff: 1.0, rho12: 630 },
-    "dió":        { Zr: 0.3, Zs: 5.4, Zh: 7.5, Zt: 13.2, diff: 1.1, rho12: 650 },
-    "éger":       { Zr: 0.4, Zs: 4.4, Zh: 7.3, Zt: 12.1, diff: 0.9, rho12: 530 },
-    "nyír":       { Zr: 0.6, Zs: 5.3, Zh: 7.8, Zt: 13.7, diff: 1.0, rho12: 650 },
-    "nyár":       { Zr: 0.3, Zs: 4.2, Zh: 8.2, Zt: 12.7, diff: 0.7, rho12: 450 },
-    "mahagóni":   { Zr: 0.2, Zs: 3.2, Zh: 5.2, Zt: 8.6,  diff: 1.0, rho12: 560 },
-    "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5,  diff: 1.2, rho12: 660 }
+    "akác":       { Zr: 0.4, Zs: 3.9, Zh: 5.8, Zt: 10.1, diff: 1.4, rho12: 730, fsp: 22, hyst: 0.81 },
+    "tölgy":      { Zr: 0.4, Zs: 4.0, Zh: 7.8, Zt: 12.2, diff: 1.3, rho12: 690, fsp: 24, hyst: 0.83 },
+    "bükk":       { Zr: 0.3, Zs: 5.8, Zh: 11.8, Zt: 17.9, diff: 1.1, rho12: 720, fsp: 30, hyst: 0.86 },
+    "erdeifenyő": { Zr: 0.4, Zs: 4.0, Zh: 7.7, Zt: 12.1, diff: 0.9, rho12: 520, fsp: 28, hyst: 0.85 },
+    "lucfenyő":   { Zr: 0.3, Zs: 3.6, Zh: 7.8, Zt: 11.7, diff: 0.8, rho12: 470, fsp: 30, hyst: 0.87 },
+    "vörösfenyő": { Zr: 0.3, Zs: 3.3, Zh: 7.8, Zt: 11.4, diff: 1.0, rho12: 600, fsp: 27, hyst: 0.84 },
+    "kőris":      { Zr: 0.2, Zs: 5.0, Zh: 8.0, Zt: 13.2, diff: 1.2, rho12: 680, fsp: 26, hyst: 0.84 },
+    "juhar":      { Zr: 0.4, Zs: 3.0, Zh: 8.0, Zt: 11.5, diff: 1.0, rho12: 630, fsp: 28, hyst: 0.85 },
+    "dió":        { Zr: 0.3, Zs: 5.4, Zh: 7.5, Zt: 13.2, diff: 1.1, rho12: 650, fsp: 25, hyst: 0.83 },
+    "éger":       { Zr: 0.4, Zs: 4.4, Zh: 7.3, Zt: 12.1, diff: 0.9, rho12: 530, fsp: 28, hyst: 0.85 },
+    "nyír":       { Zr: 0.6, Zs: 5.3, Zh: 7.8, Zt: 13.7, diff: 1.0, rho12: 650, fsp: 30, hyst: 0.86 },
+    "nyár":       { Zr: 0.3, Zs: 4.2, Zh: 8.2, Zt: 12.7, diff: 0.7, rho12: 450, fsp: 31, hyst: 0.87 },
+    "mahagóni":   { Zr: 0.2, Zs: 3.2, Zh: 5.2, Zt: 8.6,  diff: 1.0, rho12: 560, fsp: 22, hyst: 0.82 },
+    "teak":       { Zr: 0.2, Zs: 2.6, Zh: 4.7, Zt: 7.5,  diff: 1.2, rho12: 660, fsp: 20, hyst: 0.80 }
 };
 
-function rhToEmc(rh) {
+// EMC kiszámítása RH%-ból fafaj-specifikus FSP és hiszterézis figyelembevételével
+function rhToEmc(rh, speciesKey, isDesorption = false) {
     if (rh <= 0) return 0;
-    if (rh >= 100) return 30;
-    const points = [
-        { rh: 0, u: 0 }, { rh: 20, u: 4.5 }, { rh: 35, u: 6.8 },
-        { rh: 45, u: 8.3 }, { rh: 50, u: 9.2 }, { rh: 60, u: 11.0 },
-        { rh: 70, u: 13.2 }, { rh: 80, u: 16.2 }, { rh: 85, u: 18.0 },
-        { rh: 90, u: 21.0 }, { rh: 100, u: 30.0 }
+    const spData = woodData[speciesKey] || { fsp: 30, hyst: 0.85 };
+    if (rh >= 100) return spData.fsp;
+    
+    // Általános adszorpciós normálgörbe (normál 30%-os FSP-re skálázva)
+    const normPoints = [
+        { rh: 0, uNorm: 0 }, { rh: 20, uNorm: 4.2 }, { rh: 35, uNorm: 6.5 },
+        { rh: 45, uNorm: 8.0 }, { rh: 50, uNorm: 9.0 }, { rh: 60, uNorm: 10.8 },
+        { rh: 70, uNorm: 13.0 }, { rh: 80, uNorm: 16.0 }, { rh: 85, uNorm: 18.0 },
+        { rh: 90, uNorm: 21.0 }, { rh: 100, uNorm: 30.0 }
     ];
-    for (let i = 0; i < points.length - 1; i++) {
-        if (rh >= points[i].rh && rh <= points[i+1].rh) {
-            const t = (rh - points[i].rh) / (points[i+1].rh - points[i].rh);
-            return points[i].u + t * (points[i+1].u - points[i].u);
+    
+    let baseU = 12;
+    for (let i = 0; i < normPoints.length - 1; i++) {
+        if (rh >= normPoints[i].rh && rh <= normPoints[i+1].rh) {
+            const t = (rh - normPoints[i].rh) / (normPoints[i+1].rh - normPoints[i].rh);
+            baseU = normPoints[i].uNorm + t * (normPoints[i+1].uNorm - normPoints[i].uNorm);
+            break;
         }
     }
-    return 12;
+    
+    // Fafaj saját FSP-jére skálázott adszorpciós érték
+    let uAdsorption = baseU * (spData.fsp / 30.0);
+    
+    // Ha dezorpció (száradás / vízleadás) történik: U_des = U_ads / hyst
+    if (isDesorption) {
+        return Math.min(spData.fsp, uAdsorption / spData.hyst);
+    }
+    return uAdsorption;
 }
 
 function toggleInputMode() {
@@ -302,40 +323,54 @@ function toggleInputMode() {
 }
 
 function updatePreview() {
+    const species = document.getElementById('species').value;
     const rh1 = parseFloat(document.getElementById('rh1').value) || 0;
     const rh2 = parseFloat(document.getElementById('rh2').value) || 0;
-    document.getElementById('rh1_preview').innerText = `→ Becsült egyensúlyi fanedvesség (U1): ~${rhToEmc(rh1).toFixed(1)}%`;
-    document.getElementById('rh2_preview').innerText = `→ Becsült egyensúlyi fanedvesség (U2): ~${rhToEmc(rh2).toFixed(1)}%`;
+    
+    const isDesorption = rh2 < rh1;
+    const u1_est = rhToEmc(rh1, species, false);
+    const u2_est = rhToEmc(rh2, species, isDesorption);
+
+    document.getElementById('rh1_preview').innerText = `→ Becsült kikeverési U1 (adszorpció): ~${u1_est.toFixed(1)}%`;
+    document.getElementById('rh2_preview').innerText = `→ Becsült kikeverési U2 (${isDesorption ? 'dezorpció' : 'adszorpció'}): ~${u2_est.toFixed(1)}%`;
 }
 
 function calculate() {
     const species = document.getElementById('species').value;
     const cutType = document.getElementById('cutType').value;
     const mode = document.getElementById('calcMode').value;
+    const data = woodData[species] || { Zr: 0.3, Zs: 4.0, Zh: 7.0, Zt: 12.0, diff: 1.0, rho12: 600, fsp: 30, hyst: 0.85 };
     
-    let u1, u2;
+    let u1, u2, isDesorption = false;
 
     if (mode === 'rh_to_rh') {
-        u1 = rhToEmc(parseFloat(document.getElementById('rh1').value));
-        u2 = rhToEmc(parseFloat(document.getElementById('rh2').value));
+        const rh1 = parseFloat(document.getElementById('rh1').value);
+        const rh2 = parseFloat(document.getElementById('rh2').value);
+        isDesorption = rh2 < rh1;
+        u1 = rhToEmc(rh1, species, false);
+        u2 = rhToEmc(rh2, species, isDesorption);
     } else if (mode === 'u_to_u') {
         u1 = parseFloat(document.getElementById('u1').value);
         u2 = parseFloat(document.getElementById('u2').value);
+        isDesorption = u2 < u1;
     } else {
         u1 = parseFloat(document.getElementById('u1').value);
-        u2 = rhToEmc(parseFloat(document.getElementById('rh2').value));
+        const rh2 = parseFloat(document.getElementById('rh2').value);
+        const u2_ads = rhToEmc(rh2, species, false);
+        isDesorption = u2_ads < u1;
+        u2 = rhToEmc(rh2, species, isDesorption);
     }
     
     const L1 = parseFloat(document.getElementById('length').value);
     const W1 = parseFloat(document.getElementById('width').value);
     const T1 = parseFloat(document.getElementById('thickness').value);
 
-    const u1_corr = Math.min(u1, 30);
-    const u2_corr = Math.min(u2, 30);
+    // Csak a rosttelítettségi határ (FSP) alatti nedvességváltozás okoz méretváltozást
+    const u1_corr = Math.min(u1, data.fsp);
+    const u2_corr = Math.min(u2, data.fsp);
     const deltaU = u2_corr - u1_corr;
     
     const isSwelling = deltaU > 0;
-    const data = woodData[species] || { Zr: 0.3, Zs: 4.0, Zh: 7.0, Zt: 12.0, diff: 1.0, rho12: 600 };
     
     let Z_width, Z_thickness;
     if (cutType === 'tangential') {
@@ -347,24 +382,22 @@ function calculate() {
         Z_thickness = (data.Zs + data.Zh) / 2;
     }
 
-    // Méretváltozás számítása (dM = M1 * Z * dU / 3000)
-    const dL = L1 * (data.Zr * deltaU) / 3000;
-    const dW = W1 * (Z_width * deltaU) / 3000;
-    const dT = T1 * (Z_thickness * deltaU) / 3000;
+    // Méretváltozás kiszámítása a fafaj saját FSP értékével (dL = L1 * Z * dU / (100 * FSP))
+    const dL = L1 * (data.Zr * deltaU) / (100 * data.fsp);
+    const dW = W1 * (Z_width * deltaU) / (100 * data.fsp);
+    const dT = T1 * (Z_thickness * deltaU) / (100 * data.fsp);
 
     const L2 = L1 + dL;
     const W2 = W1 + dW;
     const T2 = T1 + dT;
 
     // --- Tömegváltozás számítása ---
-    // Kezdő térfogat m3-ben
     const vol1_m3 = (L1 * W1 * T1) / 1e9;
     
-    // Száraztömeg (m0) kiszámítása a légszáraz sűrűségből (12%-os u értékkel)
-    const rho0 = data.rho12 / (1 + 0.12); // kb. abszolút száraz sűrűség
+    // Száraztömeg m0 kiszámítása a légszáraz sűrűségből
+    const rho0 = data.rho12 / (1 + 0.12);
     const dryMass_kg = vol1_m3 * rho0;
     
-    // Kezdeti és cél tömeg a nedvességtartalom alapján: m = m0 * (1 + u/100)
     const mass1_kg = dryMass_kg * (1 + u1 / 100);
     const mass2_kg = dryMass_kg * (1 + u2 / 100);
     const deltaMass_kg = mass2_kg - mass1_kg;
@@ -392,6 +425,13 @@ function calculate() {
         <p><strong>Szélesség:</strong> ${W2.toFixed(1)} mm (változás: ${signStr}${dW.toFixed(2)} mm)</p>
         <p><strong>Vastagság:</strong> ${T2.toFixed(1)} mm (változás: ${signStr}${dT.toFixed(2)} mm)</p>
         
+        <div class="hyst-box">
+            <h4>🔄 Szorpciós & Hiszterézis paraméterek:</h4>
+            <p>• <strong>Alkalmazott folyamat:</strong> ${isDesorption ? 'Dezorpció (Száradás / Vízleadás)' : 'Adszorpció (Nedvesedés / Vízfelvétel)'}</p>
+            <p>• <strong>Rosttelítettségi határ (FSP):</strong> ${data.fsp}%</p>
+            <p>• <strong>Hiszterézis tényező (U_ads/U_des):</strong> ~${data.hyst} (${Math.round((1 - data.hyst)*100)}% eltérés a görbék között)</p>
+        </div>
+
         <div class="weight-box">
             <h4>⚖️ Tömegváltozás (Vízfelvétel / Leadás):</h4>
             <p>• <strong>Kezdeti tömeg:</strong> ${mass1_kg < 1 ? (mass1_kg * 1000).toFixed(0) + ' g' : mass1_kg.toFixed(2) + ' kg'}</p>
